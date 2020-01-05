@@ -1,140 +1,141 @@
 <html>
 <head>
-<meta charset="utf-8">
-<title>Informacion del Vendedor</title>
-<script type="text/javascript">
+	<meta charset="utf-8">
+	<title>Informacion del Vendedor</title>
+	<script type="text/javascript">
 
 
-var baseurl = "https://api.mercadolibre.com";
-var publicaciones = [];
+	var baseurl = "https://api.mercadolibre.com";
+	var publicaciones = [];
 
 
-function execute(idvendedor,offset){
-	var response;
-    var xmlhttp = new XMLHttpRequest();
-    if (offset != undefined)
-		xmlhttp.open("GET", baseurl + "/sites/MLA/search?search_type=scan&seller_id=" + idvendedor+"&offset="+offset, false);
-	else
-		xmlhttp.open("GET", baseurl + "/sites/MLA/search?search_type=scan&seller_id=" + idvendedor, false);
+	function execute(idvendedor,offset){
+		var response;
+	    var xmlhttp = new XMLHttpRequest();
+	    if (offset != undefined)
+			xmlhttp.open("GET", baseurl + "/sites/MLA/search?search_type=scan&seller_id=" + idvendedor+"&offset="+offset, false);
+		else
+			xmlhttp.open("GET", baseurl + "/sites/MLA/search?search_type=scan&seller_id=" + idvendedor, false);
 
-    xmlhttp.onreadystatechange =  function () { 
-        if (xmlhttp.readyState === 4 & xmlhttp.status === 200) {
-            response= xmlhttp.responseText;
-         }
-    };
-    xmlhttp.send();
-    
-    return response;
-}
-
-function getMaxSize(idvendedor){
-	var respuesta = execute(idvendedor);
-	return JSON.parse(respuesta).paging.total;
-}
-
-
-/*cada pagina tiene 50 elementos, me tiene que devolver la cantidad de ejecuciones*/
-function getCantPages(maxSize){
-	
-	var pages = parseInt(maxSize / 50);
-	
-	if ((maxSize - (pages*50)) > 0 )
-		pages ++;
-		
-	return pages;
-
-}
-
-function getAllProducts(){
-	
-	var idvendedor = document.getElementById("codigovendedor").value;
-    var maxSize = getMaxSize(idvendedor);
-    
-    var index = 0;
-    var offset = 0;
-    var pages = getCantPages(maxSize);
-    
-    var publicacionesIndex = 0;
-    
-    for (var x = 0; x < pages; x++) {
-		var respuesta = execute(idvendedor,offset);
-        respuesta = JSON.parse(respuesta);
-        for (var y = 0; y < respuesta.results.length; y++) {
-			publicaciones.push({id: respuesta.results[y].id, title: respuesta.results[y].title, category_id: respuesta.results[y].category_id});
-		}
-		offset = offset+50;
+	    xmlhttp.onreadystatechange =  function () { 
+	        if (xmlhttp.readyState === 4 & xmlhttp.status === 200) {
+	            response= xmlhttp.responseText;
+	         }
+	    };
+	    xmlhttp.send();
+	    
+	    return response;
 	}
-   obtenerCategoria(publicaciones);
-//descargarArchivo(publicaciones,"publicaciones");
-}
+
+	function getMaxSize(idvendedor){
+		var respuesta = execute(idvendedor);
+		return JSON.parse(respuesta).paging.total;
+	}
+
+
+	/*cada pagina tiene 50 elementos, me tiene que devolver la cantidad de ejecuciones*/
+	function getCantPages(maxSize){
+		
+		var pages = parseInt(maxSize / 50);
+		
+		if ((maxSize - (pages*50)) > 0 )
+			pages ++;
+			
+		return pages;
+
+	}
+
+	function getAllProducts(){
+		
+		var idvendedor = document.getElementById("codigovendedor").value;
+	    var maxSize = getMaxSize(idvendedor);
+	    
+	    var index = 0;
+	    var offset = 0;
+	    var pages = getCantPages(maxSize);
+	    
+	    var publicacionesIndex = 0;
+	    
+	    for (var x = 0; x < pages; x++) {
+			var respuesta = execute(idvendedor,offset);
+	        respuesta = JSON.parse(respuesta);
+	        for (var y = 0; y < respuesta.results.length; y++) {
+				publicaciones.push({id: respuesta.results[y].id, title: respuesta.results[y].title, category_id: respuesta.results[y].category_id});
+			}
+			offset = offset+50;
+		}
+	   obtenerCategoria(publicaciones);
+
+	}
 
 
 
-function obtenerCategoria(publicaciones) {
-    var xmlhttp3 = [];
-    for (var j = 0; j < publicaciones.length; j++) {
-       (function (j) {
-            xmlhttp3[j] = new XMLHttpRequest();
-            xmlhttp3[j].open("GET", baseurl + "/categories/" + publicaciones[j].category_id, true);
-           xmlhttp3[j].onreadystatechange = function () {
-               if (xmlhttp3[j].readyState === 4 & xmlhttp3[j].status === 200) {
-                    console.log(JSON.parse(xmlhttp3[j].responseText).name);
-                    publicaciones[j] = JSON.parse(xmlhttp3[j].responseText).name;
-                }
-            };
-            xmlhttp3[j].send();
-        })(j);
-    }
+	function obtenerCategoria(publicaciones) {
+	    var xmlhttp3 = [];
+	    for (var j = 0; j < publicaciones.length; j++) {
+	       (function (j) {
+	            xmlhttp3[j] = new XMLHttpRequest();
+	            xmlhttp3[j].open("GET", baseurl + "/categories/" + publicaciones[j].category_id, true);
+	           xmlhttp3[j].onreadystatechange = function () {
+	               if (xmlhttp3[j].readyState === 4 & xmlhttp3[j].status === 200) {
+	                    console.log(JSON.parse(xmlhttp3[j].responseText).name);
+	                    publicaciones[j] = JSON.parse(xmlhttp3[j].responseText).name;
+	                }
+	            };
+	            xmlhttp3[j].send();
+	        })(j);
+	    }
 
-descargarArchivo(publicaciones,"publicaciones");
-}
+	descargarArchivo(publicaciones,"publicaciones");
+	}
 
 
-function descargarArchivo(publicaciones, nombreArchivo) {
-  //creamos un FileReader para leer el Blob
-  var texto = [];
+	function descargarArchivo(publicaciones, nombreArchivo) {
+	  //creamos un FileReader para leer el Blob
+	  var texto = [];
 
-  for(var y=0;y<publicaciones.length;y++){
-  texto += publicaciones[y].id +"," +publicaciones[y].title+"," +publicaciones[y].category_id+"," +publicaciones[y].name+"\n" ;
-  }
+	  for(var y=0;y<publicaciones.length;y++){
+	  texto += publicaciones[y].id +"," +publicaciones[y].title+"," +publicaciones[y].category_id+"," +publicaciones[y].name+"\n" ;
+	  }
 
-  var blob = new Blob([texto], {type: "text/plain;charset=utf-8"});
-  var reader = new FileReader();
+	  var blob = new Blob([texto], {type: "text/plain;charset=utf-8"});
+	  var reader = new FileReader();
 
-  //Definimos la función que manejará el archivo
-  //una vez haya terminado de leerlo
-  reader.onload = function (event) {
-    //Usaremos un link para iniciar la descarga 
-    var save = document.createElement('a');
-    save.href = event.target.result;
-    save.target = '_blank';
-    //Truco: así le damos el nombre al archivo 
-    save.download = nombreArchivo || 'archivo.dat';
-    var clicEvent = new MouseEvent('click', {
-      'view': window,
-      'bubbles': true,
-      'cancelable': true
-    });
-    //Simulamos un clic del usuario
-    //no es necesario agregar el link al DOM.
-    save.dispatchEvent(clicEvent);
-    //Y liberamos recursos...
-    (window.URL || window.webkitURL).revokeObjectURL(save.href);
-  };
-  //Leemos el blob y esperamos a que dispare el evento "load"
-  reader.readAsDataURL(blob);
-};
+	  //Definimos la función que manejará el archivo
+	  //una vez haya terminado de leerlo
+	  reader.onload = function (event) {
+	    //Usaremos un link para iniciar la descarga 
+	    var save = document.createElement('a');
+	    save.href = event.target.result;
+	    save.target = '_blank';
+	    //nombre al archivo 
+	    save.download = nombreArchivo || 'archivo.dat';
+	    var clicEvent = new MouseEvent('click', {
+	      'view': window,
+	      'bubbles': true,
+	      'cancelable': true
+	    });
+	    //Simulamos un clic del usuario
+	    save.dispatchEvent(clicEvent);
 
-            
-            
-</script>
+	    (window.URL || window.webkitURL).revokeObjectURL(save.href);
+	  };
+	  //Leemos el blob y esperamos a que dispare el evento "load"
+	  reader.readAsDataURL(blob);
+	};
+
+	            
+	            
+	</script>
 </head>
+
 <body>
-<div>
-<h2>Items publicados por vendedor</h2>
-<h3>Ingrese ID de vendedor</h3>
-<input type="text" id = "codigovendedor">
-<button type="button" onclick="getAllProducts()">Publicaciones</button>
-</div>
+	<div>
+		<h2>Items publicados por vendedor</h2>
+		<h3>Ingrese ID de vendedor</h3>
+			<input type="text" id = "codigovendedor">
+			<button type="button" onclick="getAllProducts()">Publicaciones</button>
+	</div>
 </body>
+
 </html>
